@@ -34,7 +34,8 @@
     Popup.prototype.width = 400;
 
     Popup.prototype.popupEvents = {
-      mousedown: 'listen'
+      mousedown: 'listen',
+      touchstart: 'listen'
     };
 
     function Popup() {
@@ -77,7 +78,7 @@
     };
 
     Popup.prototype.close = function() {
-      $('body').unbind('mousedown', this.close);
+      $('body').unbind('mousedown, touchstart', this.close);
       this.release();
       return this.trigger('close');
     };
@@ -95,8 +96,8 @@
         left: e.pageX,
         top: e.pageY
       };
-      $(document).mousemove(this.drag);
-      return $(document).mouseup(this.drop);
+      $(document).on('mousemove, touchmove', (this.drag));
+      return $(document).on('mouseup, touchend', (this.drop));
     };
 
     Popup.prototype.drag = function(e) {
@@ -116,8 +117,8 @@
     };
 
     Popup.prototype.drop = function(e) {
-      $(document).unbind('mousemove', this.drag);
-      return $(document).unbind('mouseup', this.drop);
+      $(document).unbind('mousemove, touchmove', this.drag);
+      return $(document).unbind('mouseup, touchend', this.drop);
     };
 
     return Popup;
