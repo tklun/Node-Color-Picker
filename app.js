@@ -4,6 +4,9 @@
  */
 
 var express = require('express'),
+    connect = require('connect'),
+    canvas = require('canvas'),
+    QRCode = require('qrcode'),
     routes = require('./routes');
 
 var app = module.exports = express.createServer();
@@ -16,6 +19,8 @@ app.configure(function(){
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
   app.use(express.bodyParser());
+  app.use(connect.cookieParser());
+  app.use(connect.session({ secret: 'keyboard cat', cookie: { maxAge: 60000 }}));
   app.use(express.methodOverride());
   app.use(app.router);
   app.use(express.static(__dirname + '/public'));
@@ -48,6 +53,10 @@ io.sockets.on('connection', function (socket) {
   // send the message back to the front-end with a username and message.
   socket.on('sendbackground', function (data) {
     io.sockets.emit('updatebackground', socket.username, data);
+  });
+  
+  socket.on('sendrange', function (data) {
+    io.sockets.emit('updaterange', socket.username, data);
   });
 
   // Listen for messages on 'sendcircle'. When a circle has been received,

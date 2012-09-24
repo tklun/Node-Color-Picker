@@ -4,9 +4,9 @@ var socket = io.connect('/'),
 
 // When the socket connection has been made ask for a username.
 socket.on('connect', function () {
-  GLOBAL_USERNAME = prompt("What's your name?");
-  // Tell the server to add username.
-  socket.emit('adduser', GLOBAL_USERNAME);
+  // GLOBAL_USERNAME = prompt("What's your name?");
+  // // Tell the server to add username.
+  // socket.emit('adduser', GLOBAL_USERNAME);
 });
 
 // Listen for messages on 'updatechat'. When received, append the username and message to the conversation. Not optimal code, but it does the job for demo purposes.
