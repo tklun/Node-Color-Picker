@@ -2,20 +2,34 @@
 /*
  * GET home page.
  */
-var QRCode = require('qrcode');
+var QRCode = require('qrcode'),
+    cuid = require('cuid');
+
+var generateGuid = function() {
+  return cuid();
+};
 
 exports.index = function(req, res){
-  var sess = req.session;
-  console.log(req.session);
-  QRCode.toDataURL('http://10.101.24.39:3000/client',function(err,url){
+  var protocol = 'http://',
+      hostname = req.headers.host;
+      path = 'client',
+      guid = generateGuid(),
+      qrCodePath = protocol + hostname + '/' + path + '?guid=' + guid;
+  
+  console.log('Generated path: ', qrCodePath);
+  QRCode.toDataURL(qrCodePath, function(err,url) {
     res.render('index', {
       title: 'Node Color Picker',
       qrcode: url,
-      sess: sess
+      guid: guid
     });
   });
 };
 
 exports.client = function(req, res){
-  res.render('client', { title: 'Node Color Picker - Client' });
+  console.log('GUID: ', req.query.guid);
+  res.render('client', {
+    title: 'Node Color Picker - Client',
+    guid: req.query.guid
+  });
 };
