@@ -2,7 +2,6 @@
   var socketController = {
     colorSelector: '#main-color',
     rangeSelector: '#slider',
-    guidSelector: '#guid',
     getColor: function(element) {
       var color = $(element).val();
       console.log(color);
@@ -13,15 +12,25 @@
       console.log(currentNumber);
       socket.emit('sendrange', currentNumber);
     },
-    getGuid: function(element) {
-      var guid = $(element).val();
-      return guid;
+    // Quick 'meh' string parser, needs refactor.
+    parseQueryString: function() {
+      var vars = [], hash;
+      var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+      for (var i = 0; i < hashes.length; i++) {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+      }
+      return vars;
     },
     initSocketConnection: function() {
-      var uniqueGuid = socketController.getGuid(socketController.guidSelector);
+      // Parse current query string for guid parameter
+      var queryGuid = socketController.parseQueryString().guid;
       socket.on('connect', function () {
-        socket.emit('secondaryConnection', uniqueGuid);
+        // On 'sendGuid'
+        socket.emit('secondaryConnection', queryGuid);
       });
+      
     },
     initSocketListeners: function() {
       $(socketController.colorSelector).on('change', function() {

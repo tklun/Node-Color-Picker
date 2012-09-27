@@ -4,7 +4,9 @@
  */
 
 var express = require('express'),
-    routes = require('./routes');
+    routes = require('./routes'),
+    cuid = require('cuid'),
+    QRCode = require('qrcode');
 
 var app = module.exports = express.createServer();
 
@@ -39,34 +41,52 @@ app.listen(3000, function(){
 });
 
 // Socket Initialization
-
-var primarySockets = {};
-
-var getSocketByGuid = function (guid) {
-  return primarySockets[guid];
+var websockets = {
+  primarySockets: {},
+  getSocketByGuid: function (guid) {
+    return websockets.primarySockets[guid];
+  },
+  generateGuid: function() {
+    return cuid();
+  },
+  generateQRPath: function(guid) {
+    var protocol = 'http://',
+        hostname = '10.101.24.39:3000',
+        path = 'client',
+        qrCodePath = protocol + hostname + '/' + path + '?guid=' + guid;
+      return qrCodePath;
+  }
 };
 
 io.sockets.on('connection', function (socket) {
+
+  var newGuid = websockets.generateGuid();
+  socket.emit('sendGuid', newGuid);
+
   // this is a desktop
   socket.on('primaryConnection', function (guid) {
-    primarySockets[guid] = socket;
+    websockets.primarySockets[guid] = socket;
+    var qrCodePath = websockets.generateQRPath(guid);
+    
+    QRCode.toDataURL(qrCodePath, function(err,url) {
+      socket.emit('sendQRCode', url);
+    });
+    
     socket.on('disconnect', function () {
-      delete primarySockets[guid];
+      delete websockets.primarySockets[guid];
     });
   });
   
   // this is a phone
   socket.on('secondaryConnection', function (guid) {
-    socket.on('operation', function (operation) {
-      var desktopSocket = getSocketByGuid(guid);
-      desktopSocket.emit('operation', operation);
-    });
+    console.log('Echo Secondary Connection Guid: ', guid);
     socket.on('sendbackground', function (data) {
-      var desktopSocket = getSocketByGuid(guid);
+      var desktopSocket = websockets.getSocketByGuid(guid);
       desktopSocket.emit('updatebackground', socket.username, data);
     });
     socket.on('sendrange', function (data) {
-      var desktopSocket = getSocketByGuid(guid);
+      var desktopSocket = websockets.getSocketByGuid(guid);
+      console.log(desktopSocket);
       desktopSocket.emit('updaterange', socket.username, data);
     });
   });

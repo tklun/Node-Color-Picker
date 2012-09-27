@@ -2,7 +2,6 @@
   var backgroundSwitcher = {
     selector: 'body',
     rangeSelector: '#selected-range',
-    guidSelector: '#guid',
     changeBackground: function(backgroundColor) {
       $(backgroundSwitcher.selector).css('background-color', backgroundColor);
     },
@@ -11,15 +10,20 @@
       var opacity = (num/100);
       $(backgroundSwitcher.selector).css('opacity', opacity);
     },
-    getGuid: function(element) {
-      var guid = $(element).val();
-      return guid;
-    },
     initSocketConnection: function() {
-      var uniqueGuid = backgroundSwitcher.getGuid(backgroundSwitcher.guidSelector);
       socket.on('connect', function () {
-        socket.emit('primaryConnection', uniqueGuid);
+        // On 'sendGuid', received a new guid from the server and send it back through 'primaryConnection'
+        socket.on('sendGuid', function(guid) {
+          socket.emit('primaryConnection', guid);
+        });
+        
+        // On 'sendQRCode', received a new QR code datauri and inject it into the page
+        socket.on('sendQRCode', function(qrDataURI) {
+          //print generated qrDataURI
+          $('body').append($('<img/>', { src: qrDataURI }));
+        });
       });
+      
     },
     initSocketListeners: function() {
       // Listen on updatebackground channel
